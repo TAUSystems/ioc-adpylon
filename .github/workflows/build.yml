@@ -1,8 +1,9 @@
-name: Build and publish image to ghcr.io/epics-containers
+name: Build and publish image
 
 on:
   push:
-  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -57,7 +58,6 @@ jobs:
           target: runtime
           build-args: |
             IMAGE_EXT=${{ matrix.extension }}
-            IOC_VERSION=${{ github.ref_name }}
           cache-from: type=gha,scope=${{ matrix.epics-target }}
           cache-to: type=gha,mode=max,scope=${{ matrix.epics-target }}
           tags: ci_test
@@ -75,10 +75,13 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}${{ matrix.extension }}-developer
           tags: |
+            type=raw,value=latest
             type=raw,value=${{ github.ref_name }}
+            type=sha,format=short,prefix=
 
       - name: Push developer image
-        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        # if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -86,7 +89,6 @@ jobs:
           target: developer
           build-args: |
             IMAGE_EXT=${{ matrix.extension }}
-            IOC_VERSION=${{ github.ref_name }}
           tags: ${{ steps.meta-developer.outputs.tags }}
           labels: ${{ steps.meta-developer.outputs.labels }}
           push: true
@@ -98,10 +100,13 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}${{ matrix.extension }}-runtime
           tags: |
+            type=raw,value=latest
             type=raw,value=${{ github.ref_name }}
+            type=sha,format=short,prefix=
 
       - name: Push runtime image
-        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        #if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -118,9 +123,6 @@ jobs:
     needs: [build]
     if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: read
 
     # this job runs in the native developer container we just made
     container:
@@ -135,14 +137,9 @@ jobs:
         run: |
           ibek ioc generate-schema --output ibek.ioc.schema.json
 
-      - name: copy versions manifest
-        run: |
-          cp /epics/versions.json versions.json
-
       - name: Github Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
           files: |
             ibek.ioc.schema.json
-            versions.json
           generate_release_notes: true
