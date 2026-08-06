@@ -2,7 +2,7 @@ ARG IMAGE_EXT
 
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
-ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:7.0.9ec5
+ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec1
 # for pre-built common support and faster builds of this generic IOC:
 # - change above to￼DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec2
 # - comment out uv pip install lines below (unless a newer ibek is needed)
@@ -37,6 +37,13 @@ RUN ansible.sh pvlogging
 
 COPY ibek-support/autosave/ autosave
 RUN ansible.sh autosave
+
+# Add support for this Generic IOC
+COPY ibek-support/ADPylon/ ADPylon/
+RUN ansible.sh ADPylon
+
+COPY ibek-support/ADAravis/ ADAravis/
+RUN ansible.sh ADAravis
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
