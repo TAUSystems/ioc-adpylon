@@ -38,12 +38,12 @@ RUN ansible.sh pvlogging
 COPY ibek-support/autosave/ autosave
 RUN ansible.sh autosave
 
+COPY ibek-support/ADGenICam/ ADGenICam/
+RUN ansible.sh ADGenICam
+
 # Add support for this Generic IOC
 COPY ibek-support/ADPylon/ ADPylon/
 RUN ansible.sh ADPylon
-
-COPY ibek-support/ADAravis/ ADAravis/
-RUN ansible.sh ADAravis
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
