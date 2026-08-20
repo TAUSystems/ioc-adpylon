@@ -4,7 +4,7 @@ ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
 ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec1
 # for pre-built common support and faster builds of this generic IOC:
-# - change above to￼DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec2
+# - change above to DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec2
 # - comment out uv pip install lines below (unless a newer ibek is needed)
 # - remove ansible.sh lines for all support modules provided by ioc-asyn
 
@@ -60,6 +60,12 @@ FROM developer AS runtime_prep
 # /python is created by uv and is needed in the runtime target
 RUN ibek ioc extract-runtime-assets /assets /python
 
+RUN rm -rf \
+	/assets/opt/pylon/bin \
+	/assets/opt/pylon/include \
+	/assets/opt/pylon/share/pylon/doc \
+	/assets/opt/pylon/share/pylon/Samples
+
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
 
@@ -68,6 +74,11 @@ COPY --from=runtime_prep /assets /
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages
+
+# Some environment variables needed by the pylon library
+ENV PYLON_ROOT=/opt/pylon
+ENV GENICAM_GENTL32_PATH=/opt/pylon/lib/gentlproducer/gtl
+ENV GENICAM_GENTL64_PATH=/opt/pylon/lib/gentlproducer/gtl:/opt/pylon/lib/pylonCXP/bin
 
 # launch the startup script with stdio-expose to allow console connections
 CMD ["bash", "-c", "${IOC}/start.sh"]
