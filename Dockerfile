@@ -60,6 +60,20 @@ FROM developer AS runtime_prep
 # /python is created by uv and is needed in the runtime target
 RUN ibek ioc extract-runtime-assets /assets /python
 
+# Remove files from Pylon library that are not needed at runtime
+# So ADPylon ibek-support copies the entire /opt/pylon directory to /assets and 
+# these commands delete the unnecessary parts. Ideally ibek-support only copies 
+# the necessary files, but that didn't work properly, for unknown reasons.
+# TODO: diagnose
+RUN rm -rf \
+    /opt/pylon/include \
+    /opt/pylon/share
+
+RUN find /opt/pylon/bin -mindepth 1 -maxdepth 1 \
+  ! -name pylongigeconnectionguard \
+  -exec rm -rf {} +
+
+
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
 
