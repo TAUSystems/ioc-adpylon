@@ -61,10 +61,20 @@ FROM developer AS runtime_prep
 RUN ibek ioc extract-runtime-assets /assets /python
 
 # Remove files from Pylon library that are not needed at runtime
-# So ADPylon ibek-support copies the entire /opt/pylon directory to /assets and 
-# these commands delete the unnecessary parts. Ideally ibek-support only copies 
-# the necessary files, but that didn't work properly, for unknown reasons.
-# TODO: diagnose
+# ADPylon's ibek-support copies the entire /opt/pylon directory to /assets and 
+# these commands delete the unnecessary parts. 
+
+# These files were found to be minimal for the acA1440-73gm GigE camera.
+# TODO: determine if additional files from /opt/pylon are needed for USB cameras
+#   /opt/pylon/lib
+#   /opt/pylon/bin/pylongigeconnectionguard
+
+# The full /opt/pylon directory must be copied by ibek and later trimmed (rather 
+# than including only the above files) because of the way ibek copies runtime_files. For 
+# runtime_files ending in 'lib' (or bin, or db) ibek applies `strip` to the files.
+# At least one of the .so files in /opt/pylon/lib is corrupted by the strip action, 
+# so /opt/pylon/lib must be copied via its parent directory. 
+
 RUN rm -rf \
     /assets/opt/pylon/include \
     /assets/opt/pylon/share
@@ -72,7 +82,6 @@ RUN rm -rf \
 RUN find /assets/opt/pylon/bin -mindepth 1 -maxdepth 1 \
   ! -name pylongigeconnectionguard \
   -exec rm -rf {} +
-
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
