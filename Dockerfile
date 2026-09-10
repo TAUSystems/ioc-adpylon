@@ -60,12 +60,6 @@ FROM developer AS runtime_prep
 # /python is created by uv and is needed in the runtime target
 RUN ibek ioc extract-runtime-assets /assets /python
 
-RUN rm -rf \
-	/assets/opt/pylon/bin \
-	/assets/opt/pylon/include \
-	/assets/opt/pylon/share/pylon/doc \
-	/assets/opt/pylon/share/pylon/Samples
-
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
 
