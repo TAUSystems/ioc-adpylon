@@ -66,10 +66,10 @@ RUN ibek ioc extract-runtime-assets /assets /python
 # the necessary files, but that didn't work properly, for unknown reasons.
 # TODO: diagnose
 RUN rm -rf \
-    /opt/pylon/include \
-    /opt/pylon/share
+    /assets/opt/pylon/include \
+    /assets/opt/pylon/share
 
-RUN find /opt/pylon/bin -mindepth 1 -maxdepth 1 \
+RUN find /assets/opt/pylon/bin -mindepth 1 -maxdepth 1 \
   ! -name pylongigeconnectionguard \
   -exec rm -rf {} +
 
